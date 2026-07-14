@@ -98,3 +98,48 @@ function json_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
+
+/**
+ * 일회성 파일럿 정리 함수.
+ * Apps Script 편집기에서 이 함수를 직접 실행하면 실제 응답은 보존하고:
+ * 1) 지정된 파일럿 17행을 삭제해 전체 40행으로 맞추고
+ * 2) 남은 파일럿 38행의 연령대를 10대 11 / 나머지 각 9행으로 배정합니다.
+ */
+function prepareFortyResponsePilotSet() {
+  const sheet = sheet_();
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) throw new Error('정리할 응답이 없습니다.');
+  let headers = values[0];
+  const idCol = headers.indexOf('responseId');
+  if (idCol < 0) throw new Error('responseId 열을 찾을 수 없습니다.');
+  const deleteNumbers = [1, 2, 7, 10, 13, 15, 26, 27, 28, 30, 33, 34, 51, 52, 53, 54, 55];
+  const deleteIds = deleteNumbers.map(function (n) {
+    return 'PILOT_AGENT_20260714_' + ('0' + n).slice(-2);
+  });
+  const rowsToDelete = [];
+  for (let r = 1; r < values.length; r++) {
+    if (deleteIds.indexOf(String(values[r][idCol])) >= 0) rowsToDelete.push(r + 1);
+  }
+  if (rowsToDelete.length !== 17) throw new Error('삭제 대상이 17행이 아니므로 중단했습니다: ' + rowsToDelete.length);
+  rowsToDelete.sort(function (a, b) { return b - a; }).forEach(function (row) { sheet.deleteRow(row); });
+
+  headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  let groupCol = headers.indexOf('background.ageGroup');
+  if (groupCol < 0) {
+    groupCol = headers.length;
+    sheet.getRange(1, groupCol + 1).setValue('background.ageGroup').setFontWeight('bold');
+  }
+  const remaining = sheet.getDataRange().getValues();
+  const remainingIdCol = remaining[0].indexOf('responseId');
+  const pilotRows = [];
+  for (let r = 1; r < remaining.length; r++) {
+    if (String(remaining[r][remainingIdCol]).indexOf('PILOT_AGENT_20260714_') === 0) pilotRows.push(r + 1);
+  }
+  if (pilotRows.length !== 38) throw new Error('남은 파일럿이 38행이 아니므로 중단했습니다: ' + pilotRows.length);
+  const groups = [];
+  for (let i = 0; i < 11; i++) groups.push('10대');
+  ['20대', '30대', '40대'].forEach(function (g) { for (let i = 0; i < 9; i++) groups.push(g); });
+  pilotRows.forEach(function (row, i) { sheet.getRange(row, groupCol + 1).setValue(groups[i]); });
+  SpreadsheetApp.flush();
+  return '완료: 총 40행, 파일럿 연령대 10대 11 / 20대 9 / 30대 9 / 40대 9';
+}
