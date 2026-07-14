@@ -112,7 +112,7 @@ function prepareFortyResponsePilotSet() {
   let headers = values[0];
   const idCol = headers.indexOf('responseId');
   if (idCol < 0) throw new Error('responseId 열을 찾을 수 없습니다.');
-  const deleteNumbers = [1, 2, 7, 10, 13, 15, 26, 27, 28, 30, 33, 34, 51, 52, 53, 54, 55];
+  const deleteNumbers = [3, 4, 7, 10, 13, 15, 26, 27, 28, 30, 33, 34, 51, 52, 53, 54, 55];
   const deleteIds = deleteNumbers.map(function (n) {
     return 'PILOT_AGENT_20260714_' + ('0' + n).slice(-2);
   });
