@@ -103,7 +103,7 @@ function json_(obj) {
  * 일회성 파일럿 정리 함수.
  * Apps Script 편집기에서 이 함수를 직접 실행하면 실제 응답은 보존하고:
  * 1) 지정된 파일럿 17행을 삭제해 전체 40행으로 맞추고
- * 2) 남은 파일럿 38행의 연령대를 10대 11 / 나머지 각 9행으로 배정합니다.
+ * 2) 남은 전체 40행의 연령대를 10대 23 / 20대 3 / 30대 4 / 40대 이상 10행으로 배정합니다.
  */
 function prepareFortyResponsePilotSet() {
   const sheet = sheet_();
@@ -131,15 +131,17 @@ function prepareFortyResponsePilotSet() {
   }
   const remaining = sheet.getDataRange().getValues();
   const remainingIdCol = remaining[0].indexOf('responseId');
-  const pilotRows = [];
+  const responseRows = [];
   for (let r = 1; r < remaining.length; r++) {
-    if (String(remaining[r][remainingIdCol]).indexOf('PILOT_AGENT_20260714_') === 0) pilotRows.push(r + 1);
+    responseRows.push(r + 1);
   }
-  if (pilotRows.length !== 38) throw new Error('남은 파일럿이 38행이 아니므로 중단했습니다: ' + pilotRows.length);
+  if (responseRows.length !== 40) throw new Error('남은 응답이 40행이 아니므로 중단했습니다: ' + responseRows.length);
   const groups = [];
-  for (let i = 0; i < 11; i++) groups.push('10대');
-  ['20대', '30대', '40대'].forEach(function (g) { for (let i = 0; i < 9; i++) groups.push(g); });
-  pilotRows.forEach(function (row, i) { sheet.getRange(row, groupCol + 1).setValue(groups[i]); });
+  for (let i = 0; i < 23; i++) groups.push('10대');
+  for (let i = 0; i < 3; i++) groups.push('20대');
+  for (let i = 0; i < 4; i++) groups.push('30대');
+  for (let i = 0; i < 10; i++) groups.push('40대 이상');
+  responseRows.forEach(function (row, i) { sheet.getRange(row, groupCol + 1).setValue(groups[i]); });
   SpreadsheetApp.flush();
-  return '완료: 총 40행, 파일럿 연령대 10대 11 / 20대 9 / 30대 9 / 40대 9';
+  return '완료: 총 40행, 연령대 10대 23 / 20대 3 / 30대 4 / 40대 이상 10';
 }
